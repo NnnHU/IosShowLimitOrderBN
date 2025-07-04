@@ -42,18 +42,18 @@ struct SpotMarketView: View {
                         Text("Currency Pair:")
                         TextField("e.g., BTCUSDT", text: $localSelectedSymbol)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .autocapitalization(.allCharacters)
-                            .disableAutocorrection(true)
+                            .textCase(.uppercase)
+                            .autocorrectionDisabled(true)
                         
                         Text("Threshold:")
                         TextField("e.g., 50", value: $localCurrentThreshold, formatter: NumberFormatter())
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
                             .frame(width: 80)
                         
                         Button("Switch") {
                             viewModel.selectedSymbol = localSelectedSymbol.uppercased()
                             viewModel.updateThreshold(for: viewModel.selectedSymbol, threshold: localCurrentThreshold)
+                            viewModel.startFetchingData(symbol: viewModel.selectedSymbol)
                         }
                     }
                     .padding()
@@ -139,18 +139,18 @@ struct FuturesMarketView: View {
                         Text("Currency Pair:")
                         TextField("e.g., BTCUSDT", text: $localSelectedSymbol)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .autocapitalization(.allCharacters)
-                            .disableAutocorrection(true)
+                            .textCase(.uppercase)
+                            .autocorrectionDisabled(true)
                         
                         Text("Threshold:")
                         TextField("e.g., 50", value: $localCurrentThreshold, formatter: NumberFormatter())
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
                             .frame(width: 80)
                         
                         Button("Switch") {
                             viewModel.selectedSymbol = localSelectedSymbol.uppercased()
                             viewModel.updateThreshold(for: viewModel.selectedSymbol, threshold: localCurrentThreshold)
+                            viewModel.startFetchingData(symbol: viewModel.selectedSymbol)
                         }
                     }
                     .padding()
@@ -344,6 +344,8 @@ struct FuturesOrderBookDetailsView: View {
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }

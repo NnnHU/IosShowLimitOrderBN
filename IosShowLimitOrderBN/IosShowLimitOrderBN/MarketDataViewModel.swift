@@ -43,16 +43,14 @@ class MarketDataViewModel: ObservableObject {
     }
     
     func startFetchingData(symbol: String) {
-        // Stop existing streams before starting new ones
+        // 使用 switchSymbol 方法，它会自动处理断开连接和重新连接
+        let threshold = getThreshold(for: symbol)
+        BinanceAPIService.shared.switchSymbol(newSymbol: symbol, threshold: threshold)
+    }
+    
+    func stopFetchingData() {
+        // 添加一个新的公共方法来停止所有连接
         BinanceAPIService.shared.stopWebSocketStream()
-        
-        // Fetch initial snapshots
-        BinanceAPIService.shared.fetchOrderBookSnapshot(symbol: symbol, isFutures: false)
-        BinanceAPIService.shared.fetchOrderBookSnapshot(symbol: symbol, isFutures: true)
-        
-        // Start WebSocket streams
-        BinanceAPIService.shared.startWebSocketStream(symbols: [symbol], isFutures: false)
-        BinanceAPIService.shared.startWebSocketStream(symbols: [symbol], isFutures: true)
     }
     
     func updateThreshold(for symbol: String, threshold: Double) {
@@ -62,9 +60,5 @@ class MarketDataViewModel: ObservableObject {
     
     func getThreshold(for symbol: String) -> Double {
         return thresholds[symbol] ?? 50.0 // Default to 50 if not found
-    }
-    
-    func stopFetchingData() {
-        BinanceAPIService.shared.stopWebSocketStream()
     }
 }

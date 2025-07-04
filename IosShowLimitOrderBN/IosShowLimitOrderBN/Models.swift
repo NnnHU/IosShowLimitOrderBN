@@ -14,6 +14,11 @@ struct OrderBookEntry: Codable, Identifiable {
         self.quantity = Double(quantity) ?? 0.0
     }
     
+    init(price: Double, quantity: Double) {
+        self.price = price
+        self.quantity = quantity
+    }
+    
     // For decoding from Binance API (array of arrays)
     init(from decoder: Decoder) throws {
         var container = try decoder.unkeyedContainer()
