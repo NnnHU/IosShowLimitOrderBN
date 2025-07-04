@@ -1,40 +1,37 @@
-# 项目待办事项 (TODO)
+# 安卓项目 TODO 列表
 
-## 设计阶段
+## 阶段一：项目初始化与基础架构
+- [ ] 创建新的 Android Studio 项目 (Kotlin + Jetpack Compose)
+- [ ] 配置 `build.gradle`，添加必要的依赖 (Retrofit, Room, Coroutines, FCM)
+- [ ] 定义基础数据模型 (与 iOS `Models.swift` 对齐)
+- [ ] 实现网络层：
+    - [ ] 定义 Retrofit API 接口 (参考 `BinanceAPIService.swift`)
+    - [ ] 实现数据获取逻辑
+- [ ] 实现本地数据存储层：
+    - [ ] 定义 Room 数据库实体和 DAO
+    - [ ] 实现 Repository 模式
+- [ ] 设置 MVVM 基础结构 (ViewModel, View)
 
-- [x] 编写详细的设计文档
-  - [x] 确定应用架构
-  - [x] 绘制 UI/UX 草图
-  - [x] 定义数据流
-  - [x] 规划关键功能的技术实现
+## 阶段二：核心功能开发
+- [ ] 实现数据分析模块：
+    - [ ] 移植买卖比率计算逻辑 (参考 `MarketDataViewModel.swift`)
+    - [ ] 移植大单监控逻辑
+- [ ] UI 界面开发：
+    - [ ] 实现主界面布局 (参考 `ContentView.swift`)
+    - [ ] 开发自定义图表组件 (参考 `HorizontalBarChartView.swift`, `RatioChartView.swift`)
+    - [ ] 实现订单行视图 (参考 `OrderRowWithBarView.swift`)
+- [ ] 集成推送模块：
+    - [ ] 配置 Firebase 项目和 FCM SDK
+    - [ ] 实现消息接收和处理逻辑
 
-## 开发阶段
+## 阶段三：测试、优化与发布
+- [ ] 编写单元测试 (针对 ViewModel 和数据层)
+- [ ] 编写 UI 测试
+- [ ] 性能优化和内存管理
+- [ ] 适配不同安卓设备和屏幕尺寸
+- [ ] 打包并准备发布
 
-- [ ] 实现核心功能
-  - [ ] 数据获取模块
-  - [ ] 分析模块
-  - [ ] 输出模块
-  - [ ] 推送模块
-- [x] 开发用户界面
-  - [x] 解决订单列表的显示问题
-  - [x] 修复比率图被挤压的问题
-  - [x] 解决订单详情页面的排序问题
-  - [x] 修复Spot订单Depth价格标记不可见问题
-  - [x] 修复订单Ratio图表未显示问题
-  - [x] 在Buy/Sell Ratio图表下方标注比率
-  - [x] 修复Buy/Sell Ratio图表负值柱状图方向
-  - [x] 修复Futures页面没有数据问题
-  - [x] 修复详情页面ASK和BID数值位置问题
-  - [x] 修复Overview页面买卖盘价格逻辑错误
-- [ ] 集成数据管理
-
-## 测试阶段
-
-- [ ] 编写单元测试
-- [ ] 执行集成测试
-- [ ] 进行用户验收测试
-
-## 部署阶段
-
-- [ ] 准备 App Store 提交材料
-- [ ] 发布应用
+## 待定/待讨论
+- [ ] 是否需要依赖注入框架 (如 Hilt)？
+- [ ] 具体图表库的选择？
+- [ ] Discord 推送的具体实现方式 (直接在客户端推送还是通过后端服务)？

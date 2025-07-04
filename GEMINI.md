@@ -27,3 +27,14 @@
 - **数据层**: CoreData + Alamofire
 - **分析层**: 自定义算法
 - **推送层**: Discord API 集成
+
+---
+
+## 安卓项目说明
+
+为了扩展应用覆盖范围，我们正在开发一个功能与现有 iPhone 应用对齐的安卓版本。
+
+- **应用类型**: 安卓 APP
+- **技术栈**: Kotlin + Jetpack Compose (原生 Android 框架)
+- **设计文档**: 详细的设计和技术选型请参考 `ANDROID_DESIGN.md`。
+- **任务追踪**: 安卓项目的开发进度和具体任务请查阅 `TODO.md`。
