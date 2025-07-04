@@ -1,0 +1,313 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.container {
+    width: 100%;
+    max-width: 1400px; /* Adjust based on desired overall width */
+    background-color: #2d2d2d;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    font-size: 24px;
+    color: #ffffff;
+    margin-bottom: 15px;
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.legend span {
+    display: flex;
+    align-items: center;
+}
+
+.legend span::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    border-radius: 3px;
+}
+
+.spot-asks-color::before { background-color: #ff7675; } /* Reddish */
+.spot-bids-color::before { background-color: #00b894; } /* Greenish */
+.futures-asks-color::before { background-color: #ffa502; } /* Orange */
+.futures-bids-color::before { background-color: #2e86de; } /* Blue */
+.spot-ratio-color::before { background-color: #ff7675; } /* Reddish */
+.futures-ratio-color::before { background-color: #2e86de; } /* Blue */
+
+.main-navigation, .sub-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.main-navigation a, .sub-navigation a {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    background-color: #3d3d3d;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+}
+
+.main-navigation a:hover, .sub-navigation a:hover {
+    background-color: #555555;
+}
+
+.main-navigation a.active {
+    background-color: #007bff; /* Highlight active main link */
+    font-weight: bold;
+}
+
+.sub-navigation a.active {
+    background-color: #28a745; /* Highlight active sub link (e.g., green) */
+    font-weight: bold;
+}
+
+.header .main-navigation {
+    margin-bottom: 0; /* Reduce space between main and sub nav */
+}
+
+.currency-input-section {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.currency-input-section label {
+    font-size: 16px;
+    color: #ffffff;
+}
+
+.currency-input-section input[type="text"],
+.currency-input-section input[type="number"] {
+    background-color: #1e1e1e;
+    border: 1px solid #3d3d3d;
+    border-radius: 5px;
+    padding: 8px 12px;
+    color: #ffffff;
+    font-size: 16px;
+    outline: none;
+}
+
+.currency-input-section input[type="text"] {
+    width: 150px; /* Adjust width as needed */
+}
+
+.currency-input-section input[type="number"] {
+    width: 80px; /* Adjust width as needed */
+    text-align: center;
+}
+
+.currency-input-section input[type="text"]::placeholder {
+    color: #888888;
+}
+
+.currency-input-section input[type="text"]:focus,
+.currency-input-section input[type="number"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.currency-input-section button {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.currency-input-section button:hover {
+    background-color: #0056b3;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.charts-grid-single {
+    display: grid;
+    grid-template-columns: 1fr; /* Single column for main charts */
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.chart-panel {
+    background-color: #1e1e1e;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+}
+
+.chart-panel h2 {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #ffffff;
+}
+
+.chart-placeholder {
+    background-color: #3d3d3d;
+    height: 250px; /* Increased height for better visual */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    color: #cccccc;
+    border-radius: 4px;
+    position: relative; /* For pseudo-elements */
+    overflow: hidden; /* Hide overflow for bars */
+}
+
+.horizontal-bar-chart::before, .horizontal-bar-chart::after {
+    content: '';
+    position: absolute;
+    height: 20px; /* Bar height */
+    border-radius: 3px;
+    opacity: 0.7;
+}
+
+.horizontal-bar-chart::before {
+    background-color: #ff7675; /* Ask color */
+    width: 60%; /* Example width */
+    top: 30%;
+    left: 5%;
+}
+
+.horizontal-bar-chart::after {
+    background-color: #00b894; /* Bid color */
+    width: 70%; /* Example width */
+    bottom: 30%;
+    right: 5%;
+}
+
+.bar-chart::before, .bar-chart::after {
+    content: '';
+    position: absolute;
+    width: 30px; /* Bar width */
+    border-radius: 3px;
+    opacity: 0.7;
+    bottom: 0;
+}
+
+.bar-chart::before {
+    background-color: #ff7675; /* Negative ratio color */
+    height: 80%; /* Example height */
+    left: 30%;
+}
+
+.bar-chart::after {
+    background-color: #00b894; /* Positive ratio color */
+    height: 50%; /* Example height */
+    right: 30%;
+}
+
+.tables-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.table-panel {
+    background-color: #1e1e1e;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.table-panel h3 {
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #ffffff;
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+table th, table td {
+    padding: 8px 10px;
+    border: 1px solid #3d3d3d;
+    text-align: right;
+}
+
+table th {
+    background-color: #3d3d3d;
+    color: #ffffff;
+    font-weight: normal;
+}
+
+table tbody tr:nth-child(odd) {
+    background-color: #2a2a2a;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #222222;
+}
+
+table tbody tr:hover {
+    background-color: #3a3a3a;
+}
+
+table td:first-child {
+    color: #cccccc;
+}
+
+/* Specific colors for ask/bid rows if needed, based on sample.png */
+.table-panel:nth-child(1) tbody tr td:first-child, /* Spot Ask Book */
+.table-panel:nth-child(3) tbody tr td:first-child { /* Futures Ask Book */
+    color: #ff7675; /* Reddish for asks */
+}
+
+.table-panel:nth-child(2) tbody tr td:first-child, /* Spot Bid Book */
+.table-panel:nth-child(4) tbody tr td:first-child { /* Futures Bid Book */
+    color: #00b894; /* Greenish for bids */
+}
+
+.footer {
+    text-align: center;
+    font-size: 14px;
+    color: #cccccc;
+    margin-top: 20px;
+}

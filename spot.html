@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spot Market Analysis</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="currency-input-section">
+                <label for="currency-select">Currency Pair:</label>
+                <input type="text" id="currency-select" value="BTCUSDT" list="currency-suggestions">
+                <datalist id="currency-suggestions">
+                    <option value="BTCUSDT"></option>
+                    <option value="ETHUSDT"></option>
+                    <option value="SOLUSDT"></option>
+                </datalist>
+                <label for="threshold-input">Threshold:</label>
+                <input type="number" id="threshold-input" value="50">
+                <button id="switch-currency-btn">Switch</button>
+            </div>
+            <h1>Market Depth & Order Book Analysis (Spot)</h1>
+            <div class="legend">
+                <span><span class="spot-asks-color"></span> Spot Asks</span>
+                <span><span class="spot-bids-color"></span> Spot Bids</span>
+                <span><span class="spot-ratio-color"></span> Spot Ratio</span>
+            </div>
+            <nav class="main-navigation">
+                <a href="spot.html" class="active">Spot Market</a>
+                <a href="futures.html">Futures Market</a>
+            </nav>
+            <nav class="sub-navigation">
+                <a href="spot.html" class="active">Overview</a>
+                <a href="spot_details.html">Order Book Details</a>
+            </nav>
+        </header>
+
+        <div class="charts-grid-single">
+            <div class="chart-panel">
+                <h2>Binance BTCUSDT Spot Market Depth (Big Orders > <span id="current-btc-threshold">50</span> BTC)</h2>
+                <div class="chart-placeholder horizontal-bar-chart">
+                    <!-- Placeholder for Spot Market Depth Horizontal Bar Chart -->
+                    <p>Spot Depth Chart Here (Horizontal Bars)</p>
+                </div>
+            </div>
+            <div class="chart-panel">
+                <h2>Spot Buy/Sell Ratio</h2>
+                <div class="chart-placeholder bar-chart">
+                    <!-- Placeholder for Spot Buy/Sell Ratio Bar Chart -->
+                    <p>Spot Ratio Chart Here</p>
+                }
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>OI: 75,869 | Funding: +0.0040%</p>
+        </div>
+
+        
+    </div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futures Market Analysis</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="currency-input-section">
+                <label for="currency-select">Currency Pair:</label>
+                <input type="text" id="currency-select" value="BTCUSDT" list="currency-suggestions">
+                <datalist id="currency-suggestions">
+                    <option value="BTCUSDT"></option>
+                    <option value="ETHUSDT"></option>
+                    <option value="SOLUSDT"></option>
+                </datalist>
+                <label for="threshold-input">Threshold:</label>
+                <input type="number" id="threshold-input" value="50">
+                <button id="switch-currency-btn">Switch</button>
+            </div>
+            <h1>Market Depth & Order Book Analysis (Futures)</h1>
+            <div class="legend">
+                <span><span class="futures-asks-color"></span> Futures Asks</span>
+                <span><span class="futures-bids-color"></span> Futures Bids</span>
+                <span><span class="futures-ratio-color"></span> Futures Ratio</span>
+            </div>
+            <nav class="main-navigation">
+                <a href="spot.html">Spot Market</a>
+                <a href="futures.html" class="active">Futures Market</a>
+            </nav>
+            <nav class="sub-navigation">
+                <a href="futures.html" class="active">Overview</a>
+                <a href="futures_details.html">Order Book Details</a>
+            </nav>
+        </header>
+
+        <div class="charts-grid-single">
+            <div class="chart-panel">
+                <h2>Binance BTCUSDT Futures Market Depth (Big Orders > <span id="current-btc-threshold">50</span> BTC)</h2>
+                <div class="chart-placeholder horizontal-bar-chart">
+                    <!-- Placeholder for Futures Market Depth Horizontal Bar Chart -->
+                    <p>Futures Depth Chart Here (Horizontal Bars)</p>
+                </div>
+            </div>
+            <div class="chart-panel">
+                <h2>Futures Buy/Sell Ratio</h2>
+                <div class="chart-placeholder bar-chart">
+                    <!-- Placeholder for Futures Buy/Sell Ratio Bar Chart -->
+                    <p>Futures Ratio Chart Here</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>OI: 75,869 | Funding: +0.0040%</p>
+        </div>
+
+        
+    </div>
+</body>
+</html>
