@@ -6,7 +6,8 @@ import Combine
 class OrderBookManager {
     let symbol: String
     let isFutures: Bool
-    private var _orderBook: [Double: Double] = [:] // [Price: Quantity]
+    private var _bids: [Double: Double] = [:] // [Price: Quantity]
+    private var _asks: [Double: Double] = [:] // [Price: Quantity]
     var lastUpdateId: Int = 0
     
     private let minQuantity: Double // This will come from Config later
@@ -20,9 +21,10 @@ class OrderBookManager {
 
     func setInitialOrderBook(snapshot: OrderBookSnapshot) {
         queue.sync(flags: .barrier) {
-            _orderBook = [:]
-            snapshot.bids.forEach { _orderBook[$0.price] = $0.quantity }
-            snapshot.asks.forEach { _orderBook[$0.price] = $0.quantity }
+            _bids = [:]
+            _asks = [:]
+            snapshot.bids.forEach { _bids[$0.price] = $0.quantity }
+            snapshot.asks.forEach { _asks[$0.price] = $0.quantity }
             lastUpdateId = snapshot.lastUpdateId
         }
     }
@@ -34,17 +36,17 @@ class OrderBookManager {
             
             for bid in bids {
                 if bid.quantity == 0 {
-                    _orderBook[bid.price] = nil // Remove
+                    _bids[bid.price] = nil // Remove
                 } else {
-                    _orderBook[bid.price] = bid.quantity // Add or update
+                    _bids[bid.price] = bid.quantity // Add or update
                 }
             }
             
             for ask in asks {
                 if ask.quantity == 0 {
-                    _orderBook[ask.price] = nil // Remove
+                    _asks[ask.price] = nil // Remove
                 } else {
-                    _orderBook[ask.price] = ask.quantity // Add or update
+                    _asks[ask.price] = ask.quantity // Add or update
                 }
             }
             
@@ -57,16 +59,16 @@ class OrderBookManager {
         var filteredAsks: [OrderBookEntry] = []
         
         queue.sync { // Use sync for reads
-            filteredBids = Array(_orderBook
-                .filter { $0.value >= minQuantity && $0.key > 0 } // Ensure price > 0
+            filteredBids = Array(_bids
+                .filter { $0.value >= minQuantity && $0.key > 0 }
                 .map { OrderBookEntry(price: String($0.key), quantity: String($0.value)) }
                 .sorted { $0.price > $1.price } // Sort bids descending
                 .prefix(limit))
             
-            filteredAsks = Array(_orderBook
-                .filter { $0.value >= minQuantity && $0.key > 0 } // Ensure price > 0
+            filteredAsks = Array(_asks
+                .filter { $0.value >= minQuantity && $0.key > 0 }
                 .map { OrderBookEntry(price: String($0.key), quantity: String($0.value)) }
-                .sorted { $0.price < $1.price } // Sort asks ascending
+                .sorted { $0.price > $1.price } // Sort asks descending
                 .prefix(limit))
         }
         return (filteredBids, filteredAsks)
@@ -75,8 +77,8 @@ class OrderBookManager {
     func getCurrentPrice() -> Double? {
         var price: Double? = nil
         queue.sync { // Use sync for reads
-            guard let highestBid = _orderBook.filter({ $0.key > 0 }).keys.max(),
-                  let lowestAsk = _orderBook.filter({ $0.key > 0 }).keys.min() else {
+            guard let highestBid = _bids.filter({ $0.key > 0 }).keys.max(),
+                  let lowestAsk = _asks.filter({ $0.key > 0 }).keys.min() else {
                 return
             }
             price = (highestBid + lowestAsk) / 2
@@ -94,12 +96,12 @@ class OrderBookManager {
             let innerLowerBound = midPrice * (1 - lowerPercent / 100)
             let innerUpperBound = midPrice * (1 + lowerPercent / 100)
 
-            let bidsInRange = _orderBook.filter { (price, _) in
+            let bidsInRange = _bids.filter { (price, _) in
                 price >= lowerBound && price < midPrice
             }
             let bidsVolume = bidsInRange.values.reduce(0, +)
 
-            let asksInRange = _orderBook.filter { (price, _) in
+            let asksInRange = _asks.filter { (price, _) in
                 price <= upperBound && price > midPrice
             }
             let asksVolume = asksInRange.values.reduce(0, +)
@@ -109,10 +111,13 @@ class OrderBookManager {
             let ratio = total > 0 ? delta / total : 0.0
             
             let rangeName: String = {
+                let lowerStr = (lowerPercent == floor(lowerPercent)) ? String(format: "%.0f", lowerPercent) : String(format: "%.1f", lowerPercent)
+                let upperStr = (upperPercent == floor(upperPercent)) ? String(format: "%.0f", upperPercent) : String(format: "%.1f", upperPercent)
+                
                 if lowerPercent == 0 {
-                    return "0-\(Int(upperPercent))%"
+                    return "0-\(upperStr)%"
                 } else {
-                    return "\(lowerPercent)-\(upperPercent)%"
+                    return "\(lowerStr)-\(upperStr)%"
                 }
             }()
 
@@ -127,7 +132,8 @@ class OrderBookManager {
 class BinanceAPIService: NSObject, URLSessionWebSocketDelegate {
     static let shared = BinanceAPIService() // Singleton
     
-    private var webSocketTask: URLSessionWebSocketTask?
+    private var spotWebSocketTask: URLSessionWebSocketTask?
+    private var futuresWebSocketTask: URLSessionWebSocketTask?
     private var managers: [String: OrderBookManager] = [:] // [Symbol: Manager]
     
     // Publishers for real-time data updates
@@ -197,23 +203,31 @@ class BinanceAPIService: NSObject, URLSessionWebSocketDelegate {
         }
         
         let session = URLSession(configuration: .default, delegate: self, delegateQueue: OperationQueue())
-        webSocketTask = session.webSocketTask(with: url)
-        webSocketTask?.resume()
+        let webSocketTask = session.webSocketTask(with: url)
+        
+        if isFutures {
+            futuresWebSocketTask = webSocketTask
+        } else {
+            spotWebSocketTask = webSocketTask
+        }
+        
+        webSocketTask.resume()
         
         print("Starting WebSocket stream for \(symbols) (\(isFutures ? "Futures" : "Spot")) at \(urlString)")
         
-        // Start receiving messages
-        receiveWebSocketMessage()
+        
     }
     
     func stopWebSocketStream() {
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
-        webSocketTask = nil
-        print("WebSocket stream stopped.")
+        spotWebSocketTask?.cancel(with: .goingAway, reason: nil)
+        spotWebSocketTask = nil
+        futuresWebSocketTask?.cancel(with: .goingAway, reason: nil)
+        futuresWebSocketTask = nil
+        print("WebSocket streams stopped.")
     }
     
-    private func receiveWebSocketMessage() {
-        webSocketTask?.receive { [weak self] result in
+    private func receiveWebSocketMessage(for task: URLSessionWebSocketTask?) {
+        task?.receive { [weak self] result in
             guard let self = self else { return }
             
             switch result {
@@ -223,26 +237,27 @@ class BinanceAPIService: NSObject, URLSessionWebSocketDelegate {
             case .success(let message):
                 switch message {
                 case .string(let text):
-                    self.processWebSocketMessage(text: text)
+                    let isFutures = (task == self.futuresWebSocketTask)
+                    self.processWebSocketMessage(text: text, isFutures: isFutures)
                 case .data(let data):
                     print("Received binary message: \(data)")
                 @unknown default:
                     fatalError("Unknown WebSocket message type")
                 }
                 // Continue receiving messages
-                self.receiveWebSocketMessage()
+                self.receiveWebSocketMessage(for: task)
             }
         }
     }
     
-    private func processWebSocketMessage(text: String) {
+    private func processWebSocketMessage(text: String, isFutures: Bool) {
         guard let data = text.data(using: .utf8) else { return }
         
         do {
             let decoder = JSONDecoder()
             let event = try decoder.decode(DepthUpdateEvent.self, from: data)
             
-            let managerKey = "\(event.symbol.uppercased())_\(event.eventType.contains("depthUpdate") ? "SPOT" : "FUTURES")" // Adjust based on actual eventType
+            let managerKey = "\(event.symbol.uppercased())_\(isFutures ? "FUTURES" : "SPOT")"
             if let manager = managers[managerKey] {
                 manager.applyUpdate(bids: event.bids, asks: event.asks, newLastUpdateId: event.finalUpdateId)
                 self.publishMarketData(for: manager)
@@ -258,11 +273,25 @@ class BinanceAPIService: NSObject, URLSessionWebSocketDelegate {
     // MARK: - URLSessionWebSocketDelegate
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        print("WebSocket did open")
+        if webSocketTask == spotWebSocketTask {
+            print("Spot WebSocket did open")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { // Small delay
+                self.receiveWebSocketMessage(for: spotWebSocketTask)
+            }
+        } else if webSocketTask == futuresWebSocketTask {
+            print("Futures WebSocket did open")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { // Small delay
+                self.receiveWebSocketMessage(for: futuresWebSocketTask)
+            }
+        }
     }
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        print("WebSocket did close with code: \(closeCode), reason: \(reason.map { String(data: $0, encoding: .utf8) ?? "" } ?? "")")
+        if webSocketTask == spotWebSocketTask {
+            print("Spot WebSocket did close with code: \(closeCode), reason: \(reason.map { String(data: $0, encoding: .utf8) ?? "" } ?? "")")
+        } else if webSocketTask == futuresWebSocketTask {
+            print("Futures WebSocket did close with code: \(closeCode), reason: \(reason.map { String(data: $0, encoding: .utf8) ?? "" } ?? "")")
+        }
     }
     
     // MARK: - Data Publishing
@@ -275,7 +304,7 @@ class BinanceAPIService: NSObject, URLSessionWebSocketDelegate {
     ]
 
     private func publishMarketData(for manager: OrderBookManager) {
-        let (filteredBids, filteredAsks) = manager.getFilteredOrders(limit: 10) // Limit to 10 for display
+        let (filteredBids, filteredAsks) = manager.getFilteredOrders(limit: 100) // Limit to 100 for display
         let currentPrice = manager.getCurrentPrice() ?? 0.0
         
         let allQuantities = (filteredBids + filteredAsks).map { $0.quantity }

@@ -99,9 +99,15 @@ struct SpotMarketView: View {
                             .font(.headline)
                             .padding(.bottom, 5)
 
-                        RatioChartView(data: spotData.buySellRatio, isSpot: true)
-                            .frame(height: 150)
-                            .padding(.bottom)
+                        if !spotData.buySellRatio.isEmpty {
+                            RatioChartView(data: spotData.buySellRatio, isSpot: true)
+                                .frame(height: 150)
+                                .padding(.bottom)
+                        } else {
+                            Text("Buy/Sell ratio data is not available.")
+                                .frame(height: 150)
+                                .padding()
+                        }
                     } else {
                         ProgressView("Loading Spot Data...")
                             .frame(maxWidth: .infinity, minHeight: 300)
@@ -190,9 +196,15 @@ struct FuturesMarketView: View {
                             .font(.headline)
                             .padding(.bottom, 5)
 
-                        RatioChartView(data: futuresData.buySellRatio, isSpot: false)
-                            .frame(height: 150)
-                            .padding(.bottom)
+                        if !futuresData.buySellRatio.isEmpty {
+                            RatioChartView(data: futuresData.buySellRatio, isSpot: false)
+                                .frame(height: 150)
+                                .padding(.bottom)
+                        } else {
+                            Text("Buy/Sell ratio data is not available.")
+                                .frame(height: 150)
+                                .padding()
+                        }
                     } else {
                         ProgressView("Loading Futures Data...")
                             .frame(maxWidth: .infinity, minHeight: 300)
@@ -214,13 +226,23 @@ struct SpotOrderBookDetailsView: View {
                     .font(.headline)
                     .padding(.bottom, 5)
                 if let spotData = viewModel.spotMarketData {
+                    // Header
+                    HStack {
+                        Text("Price").fontWeight(.bold)
+                        Spacer()
+                        Text("Quantity").fontWeight(.bold)
+                    }
+                    .padding(.horizontal)
+                    Divider()
+
                     ForEach(spotData.asks) { ask in
                         HStack {
                             Text(String(format: "$%.2f", ask.price))
                             Spacer()
-                            Text(String(format: "%.3f", ask.quantity))
+                            Text(String(format: "%.3f", ask.quantity)).multilineTextAlignment(.trailing)
                         }
                         .padding(.horizontal)
+                        Divider()
                     }
                 } else {
                     Text("No Spot Ask Data")
@@ -231,13 +253,23 @@ struct SpotOrderBookDetailsView: View {
                     .padding(.top, 20)
                     .padding(.bottom, 5)
                 if let spotData = viewModel.spotMarketData {
+                    // Header
+                    HStack {
+                        Text("Price").fontWeight(.bold)
+                        Spacer()
+                        Text("Quantity").fontWeight(.bold)
+                    }
+                    .padding(.horizontal)
+                    Divider()
+
                     ForEach(spotData.bids) { bid in
                         HStack {
                             Text(String(format: "$%.2f", bid.price))
                             Spacer()
-                            Text(String(format: "%.3f", bid.quantity))
+                            Text(String(format: "%.3f", bid.quantity)).multilineTextAlignment(.trailing)
                         }
                         .padding(.horizontal)
+                        Divider()
                     }
                 } else {
                     Text("No Spot Bid Data")
@@ -258,13 +290,23 @@ struct FuturesOrderBookDetailsView: View {
                     .font(.headline)
                     .padding(.bottom, 5)
                 if let futuresData = viewModel.futuresMarketData {
+                    // Header
+                    HStack {
+                        Text("Price").fontWeight(.bold)
+                        Spacer()
+                        Text("Quantity").fontWeight(.bold)
+                    }
+                    .padding(.horizontal)
+                    Divider()
+
                     ForEach(futuresData.asks) { ask in
                         HStack {
                             Text(String(format: "$%.2f", ask.price))
                             Spacer()
-                            Text(String(format: "%.3f", ask.quantity))
+                            Text(String(format: "%.3f", ask.quantity)).multilineTextAlignment(.trailing)
                         }
                         .padding(.horizontal)
+                        Divider()
                     }
                 } else {
                     Text("No Futures Ask Data")
@@ -275,13 +317,23 @@ struct FuturesOrderBookDetailsView: View {
                     .padding(.top, 20)
                     .padding(.bottom, 5)
                 if let futuresData = viewModel.futuresMarketData {
+                    // Header
+                    HStack {
+                        Text("Price").fontWeight(.bold)
+                        Spacer()
+                        Text("Quantity").fontWeight(.bold)
+                    }
+                    .padding(.horizontal)
+                    Divider()
+
                     ForEach(futuresData.bids) { bid in
                         HStack {
                             Text(String(format: "$%.2f", bid.price))
                             Spacer()
-                            Text(String(format: "%.3f", bid.quantity))
+                            Text(String(format: "%.3f", bid.quantity)).multilineTextAlignment(.trailing)
                         }
                         .padding(.horizontal)
+                        Divider()
                     }
                 } else {
                     Text("No Futures Bid Data")

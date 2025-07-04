@@ -6,17 +6,35 @@ struct RatioChartView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            HStack(alignment: .bottom, spacing: 5) {
-                ForEach(data) { ratioEntry in
-                    VStack {
-                        Spacer()
-                        Rectangle()
-                            .fill(barColor(for: ratioEntry.ratio))
-                            .frame(width: (geometry.size.width / CGFloat(data.count)) * 0.6, height: max(5, CGFloat(abs(ratioEntry.ratio)) * geometry.size.height * 0.8)) // Scale height based on ratio, with a minimum of 5
-                            .cornerRadius(3)
-                        Text(ratioEntry.range)
-                            .font(.caption2)
-                            .foregroundColor(.white)
+            ZStack(alignment: .center) {
+                // Central horizontal line (representing 0 ratio)
+                Rectangle()
+                    .fill(Color.gray.opacity(0.5))
+                    .frame(height: 1) // Thin line
+                    .frame(maxWidth: .infinity)
+
+                HStack(alignment: .center, spacing: 2) { // Changed alignment to center
+                    ForEach(data) { ratioEntry in
+                        VStack {
+                            // Bar
+                            Rectangle()
+                                .fill(barColor(for: ratioEntry.ratio))
+                                .frame(width: max(0, (geometry.size.width / CGFloat(data.count)) - 2),
+                                       height: max(5, CGFloat(abs(ratioEntry.ratio)) * geometry.size.height * 0.6))
+                                .cornerRadius(3)
+                                // Adjust offset to make bars grow from the center
+                                .offset(y: ratioEntry.ratio > 0 ?
+                                        -max(5, CGFloat(abs(ratioEntry.ratio)) * geometry.size.height * 0.6) / 2 :
+                                        max(5, CGFloat(abs(ratioEntry.ratio)) * geometry.size.height * 0.6) / 2)
+
+                            // Range Text and Ratio Text
+                            Text("\(ratioEntry.range) (\(String(format: "%.1f%%", ratioEntry.ratio * 100)))")
+                                .font(.caption2)
+                                .foregroundColor(barColor(for: ratioEntry.ratio))
+                                .offset(y: ratioEntry.ratio < 0 ?
+                                        -max(5, CGFloat(abs(ratioEntry.ratio)) * geometry.size.height * 0.6) - 5 : // Move up for negative bars
+                                        5) // Move down for positive bars (some padding)
+                        }
                     }
                 }
             }
