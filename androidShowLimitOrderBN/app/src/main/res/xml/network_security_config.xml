@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext traffic for debugging -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Specific domain configuration for Binance APIs -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">api.binance.com</domain>
+        <domain includeSubdomains="true">fapi.binance.com</domain>
+        <domain includeSubdomains="true">stream.binance.com</domain>
+        <domain includeSubdomains="true">fstream.binance.com</domain>
+    </domain-config>
+</network-security-config>

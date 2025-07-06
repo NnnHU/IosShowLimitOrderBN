@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "667675667143",
+    "project_id": "iosshowlimitorderbn-android",
+    "storage_bucket": "iosshowlimitorderbn-android.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:667675667143:android:c92000c98aa95c61f9ace2",
+        "android_client_info": {
+          "package_name": "com.pythonn.androidshowlimitorderbn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAo5fbleFJ9_rnjmi05my0waiAAvT5tP9M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

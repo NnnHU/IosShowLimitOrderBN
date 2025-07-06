@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Brand Colors - Binance Inspired -->
+    <color name="primary_gold">#F0B90B</color>
+    <color name="primary_gold_dark">#D4A309</color>
+    <color name="primary_gold_light">#F5C842</color>
+    
+    <!-- Secondary Colors -->
+    <color name="secondary_dark">#1E1E1E</color>
+    <color name="secondary_gray">#2B2B2B</color>
+    <color name="secondary_light_gray">#3A3A3A</color>
+    
+    <!-- Background Colors -->
+    <color name="background_primary">#FAFAFA</color>
+    <color name="background_secondary">#FFFFFF</color>
+    <color name="background_dark">#121212</color>
+    <color name="background_card">#FFFFFF</color>
+    <color name="background_surface">#F8F9FA</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#6C757D</color>
+    <color name="text_tertiary">#ADB5BD</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_on_dark">#FFFFFF</color>
+    
+    <!-- Status Colors -->
+    <color name="success_green">#28A745</color>
+    <color name="success_green_light">#D4EDDA</color>
+    <color name="error_red">#DC3545</color>
+    <color name="error_red_light">#F8D7DA</color>
+    <color name="warning_orange">#FFC107</color>
+    <color name="warning_orange_light">#FFF3CD</color>
+    <color name="info_blue">#17A2B8</color>
+    <color name="info_blue_light">#D1ECF1</color>
+    
+    <!-- Border and Divider Colors -->
+    <color name="border_light">#E9ECEF</color>
+    <color name="border_medium">#DEE2E6</color>
+    <color name="border_dark">#CED4DA</color>
+    <color name="divider">#F1F3F4</color>
+    
+    <!-- Chart Colors -->
+    <color name="chart_positive">#26A69A</color>
+    <color name="chart_negative">#EF5350</color>
+    <color name="chart_neutral">#78909C</color>
+    <color name="chart_background">#FAFBFC</color>
+    
+    <!-- Legacy Colors (for compatibility) -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <!-- Deprecated - use new color names -->
+    <color name="background_color">#FAFAFA</color>
+</resources>
