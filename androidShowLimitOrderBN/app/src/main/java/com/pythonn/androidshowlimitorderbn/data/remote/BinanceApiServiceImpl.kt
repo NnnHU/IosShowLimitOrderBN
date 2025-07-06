@@ -299,55 +299,82 @@ class BinanceApiServiceImpl {
 
     fun switchSymbol(newSymbol: String, threshold: Double = 50.0) {
         println("Switching symbol to: $newSymbol with threshold: $threshold")
-        
-        // Use adaptive threshold if not explicitly provided
+
         val adaptiveThreshold = if (threshold == 50.0) getAdaptiveThreshold(newSymbol) else threshold
-        println("Using adaptive threshold: $adaptiveThreshold for symbol: $newSymbol")
-        
-        stopWebSocketStream()
+        println("BinanceApiServiceImpl: Using adaptive threshold: $adaptiveThreshold for symbol: $newSymbol")
 
-        // 清空当前数据状态，确保UI显示加载状态
-        _spotMarketData.value = null
-        _futuresMarketData.value = null
-        
-        managers.clear()
-        managers["${newSymbol.uppercase()}_SPOT"] = OrderBookManager(symbol = newSymbol, isFutures = false, minQuantity = adaptiveThreshold)
-        managers["${newSymbol.uppercase()}_FUTURES"] = OrderBookManager(symbol = newSymbol, isFutures = true, minQuantity = adaptiveThreshold)
+        val spotManagerKey = "${newSymbol.uppercase()}_SPOT"
+        val futuresManagerKey = "${newSymbol.uppercase()}_FUTURES"
 
-        currentSpotSymbol = newSymbol
-        currentFuturesSymbol = newSymbol
+        val spotManagerExists = managers.containsKey(spotManagerKey)
+        val futuresManagerExists = managers.containsKey(futuresManagerKey)
 
-        scope.launch {
-            try {
-                println("Attempting to fetch spot snapshot for $newSymbol")
-                val spotSnapshot = fetchOrderBookSnapshot(newSymbol, false)
-                println("Successfully fetched spot snapshot for $newSymbol with ${spotSnapshot.bids.size} bids and ${spotSnapshot.asks.size} asks")
-                managers["${newSymbol.uppercase()}_SPOT"]?.setInitialOrderBook(spotSnapshot)
-                publishMarketData(managers["${newSymbol.uppercase()}_SPOT"]!!)
-                println("Fetched initial spot snapshot for $newSymbol, lastUpdateId: ${managers["${newSymbol.uppercase()}_SPOT"]?.lastUpdateId}")
-            } catch (e: Exception) {
-                println("Error fetching spot snapshot: ${e.localizedMessage}")
-                println("Exception type: ${e.javaClass.simpleName}")
-                handleNetworkError(newSymbol, false, e)
-                e.printStackTrace()
+        // Only disconnect and reconnect if the symbol is actually changing
+        val spotSymbolChanged = currentSpotSymbol != newSymbol
+        val futuresSymbolChanged = currentFuturesSymbol != newSymbol
+
+        if (spotSymbolChanged) {
+            spotWebSocket?.cancel()
+            _spotMarketData.value = null // Clear data for old symbol
+            currentSpotSymbol = newSymbol
+            managers.remove(spotManagerKey) // Remove old manager
+        }
+        if (futuresSymbolChanged) {
+            futuresWebSocket?.cancel()
+            _futuresMarketData.value = null // Clear data for old symbol
+            currentFuturesSymbol = newSymbol
+            managers.remove(futuresManagerKey) // Remove old manager
+        }
+
+        // Initialize or update managers
+        managers.computeIfAbsent(spotManagerKey) {
+            OrderBookManager(symbol = newSymbol, isFutures = false, minQuantity = adaptiveThreshold)
+        }.minQuantity = adaptiveThreshold // Update threshold for existing manager
+        managers.computeIfAbsent(futuresManagerKey) {
+            OrderBookManager(symbol = newSymbol, isFutures = true, minQuantity = adaptiveThreshold)
+        }.minQuantity = adaptiveThreshold // Update threshold for existing manager
+
+        scope.launch(Dispatchers.IO) {
+            // Fetch and set initial snapshots if symbol changed or manager was just created
+            if (spotSymbolChanged || !spotManagerExists) {
+                try {
+                    println("Attempting to fetch spot snapshot for $newSymbol")
+                    val spotSnapshot = fetchOrderBookSnapshot(newSymbol, false)
+                    println("Successfully fetched spot snapshot for $newSymbol with ${spotSnapshot.bids.size} bids and ${spotSnapshot.asks.size} asks")
+                    managers[spotManagerKey]?.setInitialOrderBook(spotSnapshot)
+                    publishMarketData(managers[spotManagerKey]!!)
+                    println("Fetched initial spot snapshot for $newSymbol, lastUpdateId: ${managers[spotManagerKey]?.lastUpdateId}")
+                } catch (e: Exception) {
+                    println("Error fetching spot snapshot: ${e.localizedMessage}")
+                    println("Exception type: ${e.javaClass.simpleName}")
+                    handleNetworkError(newSymbol, false, e)
+                    e.printStackTrace()
+                }
             }
 
-            try {
-                println("Attempting to fetch futures snapshot for $newSymbol")
-                val futuresSnapshot = fetchOrderBookSnapshot(newSymbol, true)
-                println("Successfully fetched futures snapshot for $newSymbol with ${futuresSnapshot.bids.size} bids and ${futuresSnapshot.asks.size} asks")
-                managers["${newSymbol.uppercase()}_FUTURES"]?.setInitialOrderBook(futuresSnapshot)
-                publishMarketData(managers["${newSymbol.uppercase()}_FUTURES"]!!)
-                println("Fetched initial futures snapshot for $newSymbol, lastUpdateId: ${managers["${newSymbol.uppercase()}_FUTURES"]?.lastUpdateId}")
-            } catch (e: Exception) {
-                println("Error fetching futures snapshot: ${e.localizedMessage}")
-                println("Exception type: ${e.javaClass.simpleName}")
-                handleNetworkError(newSymbol, true, e)
-                e.printStackTrace()
+            if (futuresSymbolChanged || !futuresManagerExists) {
+                try {
+                    println("Attempting to fetch futures snapshot for $newSymbol")
+                    val futuresSnapshot = fetchOrderBookSnapshot(newSymbol, true)
+                    println("Successfully fetched futures snapshot for $newSymbol with ${futuresSnapshot.bids.size} bids and ${futuresSnapshot.asks.size} asks")
+                    managers[futuresManagerKey]?.setInitialOrderBook(futuresSnapshot)
+                    publishMarketData(managers[futuresManagerKey]!!)
+                    println("Fetched initial futures snapshot for $newSymbol, lastUpdateId: ${managers[futuresManagerKey]?.lastUpdateId}")
+                } catch (e: Exception) {
+                    println("Error fetching futures snapshot: ${e.localizedMessage}")
+                    println("Exception type: ${e.javaClass.simpleName}")
+                    handleNetworkError(newSymbol, true, e)
+                    e.printStackTrace()
+                }
             }
 
-            startWebSocketStream(newSymbol, false)
-            startWebSocketStream(newSymbol, true)
+            // Start WebSockets only if symbol changed or they were not running
+            if (spotSymbolChanged || spotWebSocket == null || spotWebSocket?.request()?.url?.host != webSocketClient.newBuilder().build().newWebSocket(Request.Builder().url("wss://stream.binance.com/ws/${newSymbol.lowercase()}@depth").build(), object : okhttp3.WebSocketListener(){}).request().url.host) {
+                startWebSocketStream(newSymbol, false)
+            }
+            if (futuresSymbolChanged || futuresWebSocket == null || futuresWebSocket?.request()?.url?.host != webSocketClient.newBuilder().build().newWebSocket(Request.Builder().url("wss://fstream.binance.com/ws/${newSymbol.lowercase()}@depth").build(), object : okhttp3.WebSocketListener(){}).request().url.host) {
+                startWebSocketStream(newSymbol, true)
+            }
         }
     }
 
@@ -473,10 +500,10 @@ class BinanceApiServiceImpl {
 
         if (manager.isFutures) {
             _futuresMarketData.value = marketData
-            println("Published futures market data for ${manager.symbol}")
+            println("BinanceApiServiceImpl: _futuresMarketData updated. Value: ${_futuresMarketData.value?.symbol}, Bids: ${_futuresMarketData.value?.bids?.size}, Asks: ${_futuresMarketData.value?.asks?.size}")
         } else {
             _spotMarketData.value = marketData
-            println("Published spot market data for ${manager.symbol}")
+            println("BinanceApiServiceImpl: _spotMarketData updated. Value: ${_spotMarketData.value?.symbol}, Bids: ${_spotMarketData.value?.bids?.size}, Asks: ${_spotMarketData.value?.asks?.size}")
         }
     }
     

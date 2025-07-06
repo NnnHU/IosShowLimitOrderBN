@@ -58,7 +58,7 @@ class OrderBookRepository(
         apiService.startWebSocketStream(symbol, isFutures)
     }
 
-    fun switchSymbol(newSymbol: String, threshold: Double = 50.0) {
+    suspend fun switchSymbol(newSymbol: String, threshold: Double = 50.0) {
         apiService.switchSymbol(newSymbol, threshold)
     }
 

@@ -8,7 +8,7 @@ import kotlin.math.pow
 class OrderBookManager(
     val symbol: String,
     val isFutures: Boolean,
-    private val minQuantity: Double
+    var minQuantity: Double
 ) {
 
     private var bids: MutableMap<Double, Double> = mutableMapOf() // [Price: Quantity]
@@ -54,6 +54,8 @@ class OrderBookManager(
     }
 
     fun getFilteredOrders(limit: Int): Pair<List<OrderBookEntry>, List<OrderBookEntry>> {
+        println("OrderBookManager: Filtering orders for ${symbol} (isFutures: ${isFutures}) with minQuantity: ${minQuantity}")
+        println("OrderBookManager: Raw bids count: ${bids.size}, Raw asks count: ${asks.size}")
         val filteredBids = bids
             .filter { it.value >= minQuantity }
             .entries

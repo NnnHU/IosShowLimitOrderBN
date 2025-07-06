@@ -10,8 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,223 +26,157 @@ fun FuturesMarketScreen(
     onNavigateToOrderBookDetails: () -> Unit
 ) {
     val futuresData by viewModel.futuresMarketData.collectAsState()
+    val currentThreshold by viewModel.currentThreshold.collectAsState()
     var localSelectedSymbol by remember { mutableStateOf("BTCUSDT") }
-    var localCurrentThreshold by remember { mutableStateOf("50.0") }
+    var localCurrentThreshold by remember { mutableStateOf(currentThreshold.toString()) }
 
-    LaunchedEffect(Unit) {
-        // Initial data fetch when the screen is first composed
-        viewModel.switchSymbol(localSelectedSymbol, localCurrentThreshold.toDoubleOrNull() ?: 50.0)
+    LaunchedEffect(localSelectedSymbol, currentThreshold) {
+        viewModel.switchSymbol(localSelectedSymbol, currentThreshold)
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(16.dp)
     ) {
-        item {
-            // Currency Input and Threshold Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = localSelectedSymbol,
-                    onValueChange = { localSelectedSymbol = it.uppercase() },
-                    label = { Text("Currency Pair") },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    modifier = Modifier.weight(1f)
-                )
+        // Currency Input and Threshold Section
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = localSelectedSymbol,
+                onValueChange = { localSelectedSymbol = it.uppercase() },
+                label = { Text("Currency Pair") },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                modifier = Modifier.weight(1f),
+                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface)
+            )
 
-                OutlinedTextField(
-                    value = localCurrentThreshold,
-                    onValueChange = { localCurrentThreshold = it },
-                    label = { Text("Threshold") },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done
-                    ),
-                    modifier = Modifier.width(120.dp)
-                )
+            OutlinedTextField(
+                value = localCurrentThreshold,
+                onValueChange = { localCurrentThreshold = it },
+                label = { Text("Threshold") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
+                modifier = Modifier.width(120.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface)
+            )
 
-                Button(
-                    onClick = {
-                        viewModel.switchSymbol(
-                            localSelectedSymbol,
-                            localCurrentThreshold.toDoubleOrNull() ?: 50.0
-                        )
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2E86DE)
-                    )
-                ) {
-                    Text("Switch", color = Color.White)
-                }
-            }
-        }
-
-        item {
-            // Navigation to Order Book Details
             Button(
-                onClick = { onNavigateToOrderBookDetails() },
-                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    viewModel.switchSymbol(
+                        localSelectedSymbol,
+                        localCurrentThreshold.toDoubleOrNull() ?: 50.0
+                    )
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF2E86DE)
                 )
             ) {
-                Text("Order Book Details", color = Color.White)
+                Text("Switch", color = Color.White)
             }
         }
 
+        Spacer(Modifier.height(8.dp))
+
+        // Navigation to Order Book Details
+        Button(
+            onClick = { onNavigateToOrderBookDetails() },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2E86DE)
+            )
+        ) {
+            Text("Order Book Details", color = Color.White)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Market Data Display
         if (futuresData != null) {
-            item {
+            // Ratio Chart (placed at the top)
+            if (futuresData!!.buySellRatio.isNotEmpty()) {
                 Text(
-                    text = "Binance ${futuresData!!.symbol} Futures Market Depth (Big Orders > ${localCurrentThreshold.toDoubleOrNull()?.toInt() ?: 50} ${futuresData!!.symbol.dropLast(4)})",
+                    text = "Order Ratio",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+                RatioChartView(data = futuresData!!.buySellRatio, isSpot = false)
+                Spacer(Modifier.height(16.dp))
             }
-            
-            // Current Price and Spread Display
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFF8F9FA)
+
+            // Current Price (placed in the middle)
+            Text(
+                text = "Current Price: ${futuresData!!.currentPrice}",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            )
+
+            // Asks (Sell Orders) - placed above current price, sorted descending
+            Text(
+                text = "Asks (${futuresData!!.asks.size})",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                reverseLayout = true // Display asks from bottom to top (highest price at top)
+            ) {
+                items(futuresData!!.asks) { ask ->
+                    OrderRowWithBarView(
+                        entry = ask,
+                        isBid = false,
+                        maxQuantity = futuresData!!.maxQuantity
                     )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Current Price",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    text = String.format("%.2f USDT", futuresData!!.currentPrice),
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF2E86DE)
-                                )
-                            }
-                            Column(
-                                horizontalAlignment = Alignment.End
-                            ) {
-                                Text(
-                                    text = "Spread",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    text = String.format("%.2f USDT", futuresData!!.spread),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF00B894)
-                                )
-                            }
-                        }
-                    }
                 }
             }
 
-            // Asks Section
-            item {
-                Text(
-                    text = "Asks",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-            }
+            Spacer(Modifier.height(16.dp))
 
-            items(futuresData!!.asks.take(5)) { ask ->
-                OrderRowWithBarView(
-                    entry = ask,
-                    maxQuantity = futuresData!!.maxQuantity,
-                    isBid = false,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-
-            // Bids Section
-            item {
-                Text(
-                    text = "Bids",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp)
-                )
-            }
-
-            items(futuresData!!.bids.take(5)) { bid ->
-                OrderRowWithBarView(
-                    entry = bid,
-                    maxQuantity = futuresData!!.maxQuantity,
-                    isBid = true,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-
-            // Buy/Sell Ratio Chart
-            item {
-                Text(
-                    text = "Futures Buy/Sell Ratio",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
-
-                if (futuresData!!.buySellRatio.isNotEmpty()) {
-                    RatioChartView(
-                        data = futuresData!!.buySellRatio,
-                        isSpot = false,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .padding(bottom = 16.dp)
-                    )
-                } else {
-                    Text(
-                        text = "Buy/Sell ratio data is not available.",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                            .padding(16.dp),
-                        textAlign = TextAlign.Center
+            // Bids (Buy Orders) - placed below current price, sorted descending
+            Text(
+                text = "Bids (${futuresData!!.bids.size})",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            ) {
+                items(futuresData!!.bids) { bid ->
+                    OrderRowWithBarView(
+                        entry = bid,
+                        isBid = true,
+                        maxQuantity = futuresData!!.maxQuantity
                     )
                 }
             }
         } else {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    contentAlignment = Alignment.Center
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        CircularProgressIndicator(
-                            color = Color(0xFF2E86DE)
-                        )
-                        Text(
-                            text = "Loading Futures Data...",
-                            fontSize = 16.sp
-                        )
-                    }
+                    CircularProgressIndicator(
+                        color = Color(0xFF2E86DE)
+                    )
+                    Text(
+                        text = "Loading Futures Data...",
+                        fontSize = 16.sp
+                    )
                 }
             }
         }

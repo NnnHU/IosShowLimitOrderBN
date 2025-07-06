@@ -13,8 +13,12 @@ import com.pythonn.androidshowlimitorderbn.ui.viewmodel.MarketDataViewModel
 
 sealed class Screen(val route: String) {
     object Main : Screen("main")
-    object SpotOrderBookDetails : Screen("spot_details")
-    object FuturesOrderBookDetails : Screen("futures_details")
+    object SpotOrderBookDetails : Screen("spot_details/{initialThreshold}") {
+        fun createRoute(initialThreshold: Double) = "spot_details/$initialThreshold"
+    }
+    object FuturesOrderBookDetails : Screen("futures_details/{initialThreshold}") {
+        fun createRoute(initialThreshold: Double) = "futures_details/$initialThreshold"
+    }
     object About : Screen("about")
 }
 
@@ -26,16 +30,18 @@ fun AppNavigation(viewModel: MarketDataViewModel) {
         composable(Screen.Main.route) {
             MainScreen(
                 viewModel = viewModel,
-                onNavigateToSpotDetails = { navController.navigate(Screen.SpotOrderBookDetails.route) },
-                onNavigateToFuturesDetails = { navController.navigate(Screen.FuturesOrderBookDetails.route) },
+                onNavigateToSpotDetails = { navController.navigate(Screen.SpotOrderBookDetails.createRoute(viewModel.currentThreshold.value)) },
+                onNavigateToFuturesDetails = { navController.navigate(Screen.FuturesOrderBookDetails.createRoute(viewModel.currentThreshold.value)) },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) }
             )
         }
         composable(Screen.SpotOrderBookDetails.route) {
-            SpotOrderBookDetailsScreen(viewModel = viewModel)
+            val initialThreshold = it.arguments?.getString("initialThreshold")?.toDoubleOrNull() ?: 0.0
+            SpotOrderBookDetailsScreen(viewModel = viewModel, navController = navController, initialThreshold = initialThreshold)
         }
         composable(Screen.FuturesOrderBookDetails.route) {
-            FuturesOrderBookDetailsScreen(viewModel = viewModel)
+            val initialThreshold = it.arguments?.getString("initialThreshold")?.toDoubleOrNull() ?: 0.0
+            FuturesOrderBookDetailsScreen(viewModel = viewModel, navController = navController, initialThreshold = initialThreshold)
         }
         composable(Screen.About.route) {
             AboutScreen(viewModel = viewModel)

@@ -3,22 +3,30 @@ package com.pythonn.androidshowlimitorderbn.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.pythonn.androidshowlimitorderbn.ui.viewmodel.MarketDataViewModel
 import com.pythonn.androidshowlimitorderbn.ui.components.OrderRowWithBarView
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.Icons
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SpotOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
+fun SpotOrderBookDetailsScreen(viewModel: MarketDataViewModel, navController: NavController, initialThreshold: Double) {
     val spotData by viewModel.spotMarketData.collectAsState()
-    
+    var localCurrentThreshold by remember { mutableStateOf(initialThreshold.toString()) }
+
     // 添加数据稳定性缓冲，避免频繁重组
     val stableSpotData by remember(spotData) {
         derivedStateOf {
@@ -41,12 +49,50 @@ fun SpotOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
     ) {
         if (stableSpotData != null) {
             item {
-                Text(
-                    text = "Spot Order Book Details",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                TopAppBar(
+                    title = { Text("Spot Order Book Details") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        }
+                    }
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = localCurrentThreshold,
+                        onValueChange = { localCurrentThreshold = it },
+                        label = { Text("Filter Threshold") },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface)
+                    )
+
+                    Button(
+                        onClick = {
+                            viewModel.switchSymbol(
+                                stableSpotData!!.symbol,
+                                localCurrentThreshold.toDoubleOrNull() ?: 50.0
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00B894)
+                        )
+                    ) {
+                        Text("Apply", color = Color.White)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
             
             // Asks Section
@@ -83,7 +129,7 @@ fun SpotOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             }
             
-            items(stableSpotData!!.asks) { ask ->
+            items(stableSpotData!!.asks.filter { it.quantity >= (localCurrentThreshold.toDoubleOrNull() ?: 50.0) }) { ask ->
                 OrderRowWithBarView(
                     entry = ask,
                     maxQuantity = stableSpotData!!.maxQuantity,
@@ -130,7 +176,7 @@ fun SpotOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             }
             
-            items(stableSpotData!!.bids) { bid ->
+            items(stableSpotData!!.bids.filter { it.quantity >= (localCurrentThreshold.toDoubleOrNull() ?: 50.0) }) { bid ->
                 OrderRowWithBarView(
                     entry = bid,
                     maxQuantity = stableSpotData!!.maxQuantity,
@@ -164,10 +210,12 @@ fun SpotOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FuturesOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
+fun FuturesOrderBookDetailsScreen(viewModel: MarketDataViewModel, navController: NavController, initialThreshold: Double) {
     val futuresData by viewModel.futuresMarketData.collectAsState()
-    
+    var localCurrentThreshold by remember { mutableStateOf(initialThreshold.toString()) }
+
     // 添加数据稳定性缓冲，避免频繁重组
     val stableFuturesData by remember(futuresData) {
         derivedStateOf {
@@ -190,12 +238,50 @@ fun FuturesOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
     ) {
         if (stableFuturesData != null) {
             item {
-                Text(
-                    text = "Futures Order Book Details",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                TopAppBar(
+                    title = { Text("Futures Order Book Details") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        }
+                    }
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = localCurrentThreshold,
+                        onValueChange = { localCurrentThreshold = it },
+                        label = { Text("Filter Threshold") },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface)
+                    )
+
+                    Button(
+                        onClick = {
+                            viewModel.switchSymbol(
+                                stableFuturesData!!.symbol,
+                                localCurrentThreshold.toDoubleOrNull() ?: 50.0
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2E86DE)
+                        )
+                    ) {
+                        Text("Apply", color = Color.White)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
             
             // Asks Section
@@ -232,7 +318,7 @@ fun FuturesOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             }
             
-            items(stableFuturesData!!.asks) { ask ->
+            items(stableFuturesData!!.asks.filter { it.quantity >= (localCurrentThreshold.toDoubleOrNull() ?: 50.0) }) { ask ->
                 OrderRowWithBarView(
                     entry = ask,
                     maxQuantity = stableFuturesData!!.maxQuantity,
@@ -279,7 +365,7 @@ fun FuturesOrderBookDetailsScreen(viewModel: MarketDataViewModel) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             }
             
-            items(stableFuturesData!!.bids) { bid ->
+            items(stableFuturesData!!.bids.filter { it.quantity >= (localCurrentThreshold.toDoubleOrNull() ?: 50.0) }) { bid ->
                 OrderRowWithBarView(
                     entry = bid,
                     maxQuantity = stableFuturesData!!.maxQuantity,
